@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üniversite Ders & Konu Takip Paneli</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-full flex flex-col justify-between bg-slate-950 text-slate-100 selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
+                        Akademik Takip Paneli
+                    </h1>
+                    <p class="text-xs text-slate-400">Üniversite 1. Sınıf Çalışma & Konu Planlayıcı</p>
+                </div>
+            </div>
+
+            <!-- Header Quick Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="resetDataModal()" class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-900/50 rounded-lg transition-all flex items-center gap-1.5 bg-slate-900">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span class="hidden sm:inline">Sıfırla</span>
+                </button>
+                <div class="text-xs px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 rounded-lg flex items-center gap-2">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span id="current-date-str">--.--.----</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+        
+        <!-- Overall Progress Dashboard Widget -->
+        <section class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-sky-400">Genel Durum Özetı</span>
+                    <h2 class="text-2xl font-bold text-white">Dönem Tamamlanma Oranı</h2>
+                    <p class="text-sm text-slate-400">Matematik 1 ve Fizik 1 derslerindeki ilerleme seviyeniz.</p>
+                </div>
+
+                <!-- Stats Badges -->
+                <div class="flex items-center gap-4 sm:gap-6">
+                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-3 text-center min-w-[90px]">
+                        <span class="block text-2xl font-bold text-white" id="stat-total-topics">0</span>
+                        <span class="text-[11px] text-slate-400 font-medium uppercase">Toplam Konu</span>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-3 text-center min-w-[90px]">
+                        <span class="block text-2xl font-bold text-emerald-400" id="stat-completed-topics">0</span>
+                        <span class="text-[11px] text-slate-400 font-medium uppercase">Tamamlandı</span>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-3 text-center min-w-[90px]">
+                        <span class="block text-2xl font-bold text-sky-400" id="stat-overall-percentage">%0</span>
+                        <span class="text-[11px] text-slate-400 font-medium uppercase">Başarı</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Progress Bar -->
+            <div class="mt-6 space-y-2">
+                <div class="flex justify-between text-xs text-slate-400 font-medium">
+                    <span>Genel İlerleme</span>
+                    <span id="stat-progress-text">0 / 0 Konu Tamamlandı</span>
+                </div>
+                <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                    <div id="overall-progress-bar" class="bg-gradient-to-r from-indigo-500 via-sky-500 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out w-0"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily To-Do / Study Plan Section -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Bugünkü Hedefler & Çalışma Listesi</h3>
+                        <p class="text-xs text-slate-400">Her gün tamamlamanız gereken özel görevleri buraya ekleyebilirsiniz.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Task Input -->
+            <form id="daily-task-form" onsubmit="addDailyTask(event)" class="flex gap-2 mb-4">
+                <input type="text" id="daily-task-input" placeholder="Örn: Mat1 Türev Kurallarından 40 soru çöz..." class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-all">
+                <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2 shrink-0">
+                    <i class="fa-solid fa-plus"></i> Ekle
+                </button>
+            </form>
+
+            <!-- Daily Tasks Container -->
+            <div id="daily-tasks-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Daily tasks JS dynamic rendering -->
+            </div>
+        </section>
+
+        <!-- Main Courses & Topics Section -->
+        <section class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Dersler & Konu Listesi</h3>
+                        <p class="text-xs text-slate-400">Konuları tamamladıkça işaretleyin.</p>
+                    </div>
+                </div>
+
+                <!-- Add Custom Course Button -->
+                <button onclick="openAddCourseModal()" class="self-start sm:self-auto bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus"></i> Yeni Ders Ekle
+                </button>
+            </div>
+
+            <!-- Dynamic Course Navigation Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800/60" id="course-tabs">
+                <!-- Tabs rendered by JS -->
+            </div>
+
+            <!-- Active Course Details Container -->
+            <div id="active-course-content" class="space-y-6">
+                <!-- Dynamic Course Content -->
+            </div>
+        </section>
+
+        <!-- Student Personal Profile & Notes Footer Section -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Öğrenci Profil Kartı & Akademik Notlar</h3>
+                        <p class="text-xs text-slate-400">Kişisel bilgilerinizi ve dönem hedeflerinizi güncelleyin.</p>
+                    </div>
+                </div>
+
+                <button id="edit-profile-btn" onclick="toggleProfileEdit()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Düzenle</span>
+                </button>
+            </div>
+
+            <!-- Profile Content View -->
+            <div id="profile-view" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Personal Info Column -->
+                <div class="space-y-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-800">
+                        <div class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xl text-sky-400">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <div>
+                            <h4 id="view-student-name" class="font-semibold text-white text-base">Ad Soyad Giriniz</h4>
+                            <p id="view-student-year" class="text-xs text-slate-400">1. Sınıf Öğrencisi</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between py-1 border-b border-slate-800/40">
+                            <span class="text-slate-400">Üniversite:</span>
+                            <span id="view-student-univ" class="font-medium text-slate-200">Üniversiteniz</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-800/40">
+                            <span class="text-slate-400">Bölüm:</span>
+                            <span id="view-student-dept" class="font-medium text-slate-200">Bölümünüz</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">Öğrenci No:</span>
+                            <span id="view-student-no" class="font-medium text-slate-200">----</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals Column -->
+                <div class="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye"></i> Dönem Hedefleri
+                        </h4>
+                        <p id="view-student-goals" class="text-xs text-slate-300 leading-relaxed whitespace-pre-line italic">
+                            Henüz bir hedef girilmedi. Düzenle butonuna basarak bu döneme ait akademik hedeflerinizi ekleyebilirsiniz.
+                        </p>
+                    </div>
+                    <div class="text-[10px] text-slate-500 text-right pt-2 border-t border-slate-800/50">1. Sınıf - Güz Dönemi</div>
+                </div>
+
+                <!-- Personal Notes Column -->
+                <div class="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-note-sticky"></i> Genel Notlar & Hatırlatmalar
+                        </h4>
+                        <p id="view-student-notes" class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
+                            Vize ve final tarihleri, danışman görüşme saatleri veya sınav hatırlatmaları buraya yazılabilir.
+                        </p>
+                    </div>
+                    <div class="text-[10px] text-slate-500 text-right pt-2 border-t border-slate-800/50">Otomatik Kaydedilir</div>
+                </div>
+            </div>
+
+            <!-- Profile Edit Form (Hidden by default) -->
+            <form id="profile-edit-form" onsubmit="saveProfile(event)" class="hidden space-y-4 bg-slate-950 p-5 rounded-xl border border-slate-800 mt-2">
+                <h4 class="text-sm font-semibold text-sky-400 border-b border-slate-800 pb-2">Profil Bilgilerini Güncelle</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Ad Soyad</label>
+                        <input type="text" id="edit-name" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Üniversite</label>
+                        <input type="text" id="edit-univ" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Bölüm</label>
+                        <input type="text" id="edit-dept" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Sınıf / Öğrenci No</label>
+                        <input type="text" id="edit-no" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Dönem Hedefleri</label>
+                        <textarea id="edit-goals" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-sky-500" placeholder="Örn: Mat1 ortalamasını 3.5 üstü tutmak..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Kişisel Notlar</label>
+                        <textarea id="edit-notes" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-sky-500" placeholder="Örn: Mat vizesi 12 Kasım'da..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="toggleProfileEdit()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium">İptal</button>
+                    <button type="submit" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-slate-950 font-semibold rounded-lg text-xs">Kaydet</button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Modal for Adding Course -->
+    <div id="add-course-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-sky-400"></i> Yeni Ders Ekle
+                </h3>
+                <button onclick="closeAddCourseModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleAddNewCourse(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Ders Kodu & Adı</label>
+                    <input type="text" id="new-course-title" required placeholder="Örn: Kimya 1 veya Kim1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Renk Teması</label>
+                    <select id="new-course-color" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500">
+                        <option value="emerald">Yeşil (Emerald)</option>
+                        <option value="purple">Mor (Purple)</option>
+                        <option value="amber">Turuncu (Amber)</option>
+                        <option value="rose">Kırmızı (Rose)</option>
+                        <option value="sky">Mavi (Sky)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAddCourseModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium">İptal</button>
+                    <button type="submit" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-xl text-xs">Ders Oluştur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/40 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>© <span id="year-span">2026</span> Üniversite Çalışma Takip Paneli. Başarılar dileriz!</p>
+            <div class="flex items-center gap-4 text-slate-400">
+                <span class="hover:text-sky-400 transition-colors"><i class="fa-solid fa-graduation-cap"></i> Mat1 & Fizik1</span>
+                <span>•</span>
+                <span class="hover:text-emerald-400 transition-colors"><i class="fa-solid fa-check-double"></i> Yerel Kayıt Aktif</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* Default Pre-loaded Courses Data */
+        const defaultCourses = [
+            {
+                id: 'mat1',
+                title: 'Matematik 1 (Mat1)',
+                color: 'sky',
+                topics: [
+                    { id: 'mat1-1', title: 'Analitik Geometri', completed: false },
+                    { id: 'mat1-2', title: 'Trigonometri', completed: false },
+                    { id: 'mat1-3', title: 'Logaritma', completed: false },
+                    { id: 'mat1-4', title: 'Çarpanlara Ayırma', completed: false },
+                    { id: 'mat1-5', title: 'Eşitsizlikler', completed: false },
+                    { id: 'mat1-6', title: 'Fonksiyon', completed: false },
+                    { id: 'mat1-7', title: 'Limit', completed: false },
+                    { id: 'mat1-8', title: 'Süreklilik', completed: false },
+                    { id: 'mat1-9', title: 'Ara Değer Teoremi', completed: false },
+                    { id: 'mat1-10', title: 'Asimptot Kavramı', completed: false },
+                    { id: 'mat1-11', title: 'Türev Kuralları', completed: false },
+                    { id: 'mat1-12', title: 'Rolle Teoremi & Ortalama Değer Teoremi', completed: false },
+                    { id: 'mat1-13', title: 'Türev Uygulamaları', completed: false },
+                    { id: 'mat1-14', title: 'Belirsiz İntegral', completed: false },
+                    { id: 'mat1-15', title: 'Belirli İntegral', completed: false },
+                    { id: 'mat1-16', title: 'Riemann Toplamı', completed: false },
+                    { id: 'mat1-17', title: 'Hiperbolik Fonksiyonlar', completed: false },
+                    { id: 'mat1-18', title: 'Belirli İntegral Uygulamaları', completed: false },
+                    { id: 'mat1-19', title: 'Genelleştirilmiş İntegraller', completed: false }
+                ]
+            },
+            {
+                id: 'fizik1',
+                title: 'Fizik 1 (Fizik1)',
+                color: 'emerald',
+                topics: [
+                    { id: 'fizik1-1', title: 'Vektörler', completed: false },
+                    { id: 'fizik1-2', title: 'Bir Boyutta Hareket', completed: false },
+                    { id: 'fizik1-3', title: 'İki veya Üç Boyutta Hareket', completed: false },
+                    { id: 'fizik1-4', title: "Newton'un Hareket Yasaları", completed: false },
+                    { id: 'fizik1-5', title: "Newton'un Hareket Yasalarının Uygulamaları", completed: false },
+                    { id: 'fizik1-6', title: 'İş ve Kinetik Enerji', completed: false },
+                    { id: 'fizik1-7', title: 'Potansiyel Enerji ve Enerji Korunumu', completed: false },
+                    { id: 'fizik1-8', title: 'İtme ve Çizgisel Momentum', completed: false },
+                    { id: 'fizik1-9', title: 'Dönme Hareketi', completed: false },
+                    { id: 'fizik1-10', title: 'Dönme Hareketinin Dinamiği', completed: false },
+                    { id: 'fizik1-11', title: 'Kütle Çekimi', completed: false },
+                    { id: 'fizik1-12', title: 'Periyodik Hareket', completed: false }
+                ]
+            }
+        ];
+
+        /* Default Profile State */
+        const defaultProfile = {
+            name: 'Öğrenci Adı',
+            univ: 'Üniversite Adı',
+            dept: 'Mühendislik / Fen Fakültesi',
+            no: '2026xxxx',
+            goals: '1. Dönem tüm dersleri yüksek harf notuyla geçmek.\nMatematik ve Fizik sorularını günlük tekrar etmek.',
+            notes: 'Vize Sınavları Yaklaşıyor!\nHer gün en az 2 saat ders tekrarı yapılacak.'
+        };
+
+        /* State Variables */
+        let appData = {
+            courses: [],
+            dailyTasks: [],
+            profile: {}
+        };
+        let activeCourseId = 'mat1';
+
+        window.onload = function() {
+            // Set current date string
+            const now = new Date();
+            document.getElementById('current-date-str').textContent = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('year-span').textContent = now.getFullYear();
+
+            // Load data from LocalStorage
+            loadData();
+
+            // Render all UI components
+            renderDashboardStats();
+            renderDailyTasks();
+            renderCourseTabs();
+            renderActiveCourse();
+            renderProfile();
+        };
+
+        /* Load Data from LocalStorage */
+        function loadData() {
+            const savedCourses = localStorage.getItem('uni_tracker_courses');
+            const savedDailyTasks = localStorage.getItem('uni_tracker_daily');
+            const savedProfile = localStorage.getItem('uni_tracker_profile');
+
+            appData.courses = savedCourses ? JSON.parse(savedCourses) : defaultCourses;
+            appData.dailyTasks = savedDailyTasks ? JSON.parse(savedDailyTasks) : [
+                { id: 'd1', title: 'Matematik 1 - Limit konusundan 30 soru çöz', completed: false },
+                { id: 'd2', title: 'Fizik 1 - Vektörler konu özetini çıkar', completed: true }
+            ];
+            appData.profile = savedProfile ? JSON.parse(savedProfile) : defaultProfile;
+
+            // Make sure active course exists
+            if (!appData.courses.find(c => c.id === activeCourseId) && appData.courses.length > 0) {
+                activeCourseId = appData.courses[0].id;
+            }
+        }
+
+        /* Save State to LocalStorage */
+        function saveData() {
+            localStorage.setItem('uni_tracker_courses', JSON.stringify(appData.courses));
+            localStorage.setItem('uni_tracker_daily', JSON.stringify(appData.dailyTasks));
+            localStorage.setItem('uni_tracker_profile', JSON.stringify(appData.profile));
+            
+            // Re-render dashboard overview stats whenever data changes
+            renderDashboardStats();
+        }
+
+        function renderDashboardStats() {
+            let totalTopics = 0;
+            let completedTopics = 0;
+
+            appData.courses.forEach(course => {
+                course.topics.forEach(t => {
+                    totalTopics++;
+                    if (t.completed) completedTopics++;
+                });
+            });
+
+            const percentage = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
+            document.getElementById('stat-total-topics').textContent = totalTopics;
+            document.getElementById('stat-completed-topics').textContent = completedTopics;
+            document.getElementById('stat-overall-percentage').textContent = `%${percentage}`;
+            document.getElementById('stat-progress-text').textContent = `${completedTopics} / ${totalTopics} Konu Tamamlandı`;
+            document.getElementById('overall-progress-bar').style.width = `${percentage}%`;
+        }
+
+        function renderDailyTasks() {
+            const container = document.getElementById('daily-tasks-list');
+            if (appData.dailyTasks.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic col-span-full py-2">Bugün için henüz bir görev eklenmedi.</p>`;
+                return;
+            }
+
+            container.innerHTML = appData.dailyTasks.map(task => `
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/80 border ${task.completed ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-slate-800'} transition-all group">
+                    <label class="flex items-center gap-3 cursor-pointer flex-grow pr-2 min-w-0">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleDailyTask('${task.id}')" class="w-4 h-4 rounded border-slate-700 text-amber-500 focus:ring-amber-500/20 bg-slate-900 cursor-pointer">
+                        <span class="text-xs text-slate-200 truncate ${task.completed ? 'line-through text-slate-500' : ''}">${escapeHtml(task.title)}</span>
+                    </label>
+                    <button onclick="deleteDailyTask('${task.id}')" class="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-1 text-xs">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addDailyTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('daily-task-input');
+            const title = input.value.trim();
+            if (!title) return;
+
+            appData.dailyTasks.push({
+                id: 'daily-' + Date.now(),
+                title: title,
+                completed: false
+            });
+
+            input.value = '';
+            saveData();
+            renderDailyTasks();
+        }
+
+        function toggleDailyTask(id) {
+            const task = appData.dailyTasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveData();
+                renderDailyTasks();
+            }
+        }
+
+        function deleteDailyTask(id) {
+            appData.dailyTasks = appData.dailyTasks.filter(t => t.id !== id);
+            saveData();
+            renderDailyTasks();
+        }
+
+        function renderCourseTabs() {
+            const tabsContainer = document.getElementById('course-tabs');
+            
+            tabsContainer.innerHTML = appData.courses.map(course => {
+                const isActive = course.id === activeCourseId;
+                const total = course.topics.length;
+                const completed = course.topics.filter(t => t.completed).length;
+                const badgeColor = course.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-sky-500/20 text-sky-300';
+
+                return `
+                    <button onclick="setActiveCourse('${course.id}')" class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-xs whitespace-nowrap transition-all border shrink-0 ${
+                        isActive 
+                        ? 'bg-slate-800 text-white border-sky-500/50 shadow-lg' 
+                        : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-200'
+                    }">
+                        <i class="fa-solid fa-book text-sm ${isActive ? 'text-sky-400' : 'text-slate-500'}"></i>
+                        <span>${escapeHtml(course.title)}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}">
+                            ${completed}/${total}
+                        </span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setActiveCourse(courseId) {
+            activeCourseId = courseId;
+            renderCourseTabs();
+            renderActiveCourse();
+        }
+
+        function renderActiveCourse() {
+            const container = document.getElementById('active-course-content');
+            const course = appData.courses.find(c => c.id === activeCourseId);
+
+            if (!course) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-sm">Seçili ders bulunamadı.</div>`;
+                return;
+            }
+
+            const total = course.topics.length;
+            const completed = course.topics.filter(t => t.completed).length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            container.innerHTML = `
+                <!-- Course Overview Header -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h4 class="text-lg font-bold text-white">${escapeHtml(course.title)}</h4>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">${total} Konu</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Bu dersteki müfredat konularınızı adım adım tamamlayın.</p>
+                    </div>
+
+                    <!-- Course Specific Progress Bar -->
+                    <div class="w-full md:w-64 space-y-1.5">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-slate-400">Ders İlerlemesi</span>
+                            <span class="text-sky-400">%${percentage} (${completed}/${total})</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div class="bg-gradient-to-r from-sky-500 to-emerald-400 h-full transition-all duration-300" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add New Topic Form -->
+                <form onsubmit="handleAddTopic(event, '${course.id}')" class="flex gap-2">
+                    <input type="text" id="new-topic-input-${course.id}" placeholder="Bu derse yeni konu başlığı ekle..." class="flex-grow bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500">
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Konu Ekle
+                    </button>
+                </form>
+
+                <!-- Topics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    ${course.topics.map((topic, index) => `
+                        <div class="flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                            topic.completed 
+                            ? 'bg-emerald-950/10 border-emerald-500/30 text-slate-300' 
+                            : 'bg-slate-900/90 border-slate-800/80 hover:border-slate-700'
+                        } group">
+                            <label class="flex items-start gap-3 cursor-pointer flex-grow pr-2 min-w-0">
+                                <input type="checkbox" ${topic.completed ? 'checked' : ''} onchange="toggleTopic('${course.id}', '${topic.id}')" class="mt-0.5 w-4 h-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500/20 bg-slate-950 cursor-pointer shrink-0">
+                                <div class="min-w-0">
+                                    <span class="text-xs font-semibold text-slate-400 block text-[10px] uppercase tracking-wider">Konu ${index + 1}</span>
+                                    <span class="text-xs font-medium ${topic.completed ? 'line-through text-slate-500' : 'text-slate-100'} break-words">${escapeHtml(topic.title)}</span>
+                                </div>
+                            </label>
+
+                            <div class="flex items-center gap-1">
+                                ${topic.completed 
+                                    ? '<span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30 shrink-0">Bitti</span>' 
+                                    : '<span class="text-[10px] font-medium px-2 py-0.5 bg-slate-800 text-slate-400 rounded-full shrink-0">Devam Edecek</span>'
+                                }
+                                <button onclick="deleteTopic('${course.id}', '${topic.id}')" title="Konuyu Sil" class="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-xs ml-1">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function toggleTopic(courseId, topicId) {
+            const course = appData.courses.find(c => c.id === courseId);
+            if (course) {
+                const topic = course.topics.find(t => t.id === topicId);
+                if (topic) {
+                    topic.completed = !topic.completed;
+                    saveData();
+                    renderCourseTabs();
+                    renderActiveCourse();
+                }
+            }
+        }
+
+        function handleAddTopic(e, courseId) {
+            e.preventDefault();
+            const input = document.getElementById(`new-topic-input-${courseId}`);
+            const title = input.value.trim();
+            if (!title) return;
+
+            const course = appData.courses.find(c => c.id === courseId);
+            if (course) {
+                course.topics.push({
+                    id: courseId + '-' + Date.now(),
+                    title: title,
+                    completed: false
+                });
+
+                input.value = '';
+                saveData();
+                renderCourseTabs();
+                renderActiveCourse();
+            }
+        }
+
+        function deleteTopic(courseId, topicId) {
+            const course = appData.courses.find(c => c.id === courseId);
+            if (course) {
+                course.topics = course.topics.filter(t => t.id !== topicId);
+                saveData();
+                renderCourseTabs();
+                renderActiveCourse();
+            }
+        }
+
+        /* Add Course Modal Handlers */
+        function openAddCourseModal() {
+            document.getElementById('add-course-modal').classList.remove('hidden');
+        }
+
+        function closeAddCourseModal() {
+            document.getElementById('add-course-modal').classList.add('hidden');
+        }
+
+        function handleAddNewCourse(e) {
+            e.preventDefault();
+            const title = document.getElementById('new-course-title').value.trim();
+            const color = document.getElementById('new-course-color').value;
+
+            if (!title) return;
+
+            const newCourseId = 'course-' + Date.now();
+            appData.courses.push({
+                id: newCourseId,
+                title: title,
+                color: color,
+                topics: []
+            });
+
+            saveData();
+            closeAddCourseModal();
+            document.getElementById('new-course-title').value = '';
+            setActiveCourse(newCourseId);
+        }
+
+        function renderProfile() {
+            const p = appData.profile;
+            document.getElementById('view-student-name').textContent = p.name || 'Ad Soyad Giriniz';
+            document.getElementById('view-student-univ').textContent = p.univ || 'Üniversite Adı';
+            document.getElementById('view-student-dept').textContent = p.dept || 'Bölüm Adı';
+            document.getElementById('view-student-no').textContent = p.no || '2026xxxx';
+            document.getElementById('view-student-goals').textContent = p.goals || 'Henüz bir hedef eklenmedi.';
+            document.getElementById('view-student-notes').textContent = p.notes || 'Henüz not eklenmedi.';
+        }
+
+        function toggleProfileEdit() {
+            const view = document.getElementById('profile-view');
+            const form = document.getElementById('profile-edit-form');
+            const btn = document.getElementById('edit-profile-btn');
+
+            if (form.classList.contains('hidden')) {
+                // Populate form
+                document.getElementById('edit-name').value = appData.profile.name || '';
+                document.getElementById('edit-univ').value = appData.profile.univ || '';
+                document.getElementById('edit-dept').value = appData.profile.dept || '';
+                document.getElementById('edit-no').value = appData.profile.no || '';
+                document.getElementById('edit-goals').value = appData.profile.goals || '';
+                document.getElementById('edit-notes').value = appData.profile.notes || '';
+
+                view.classList.add('hidden');
+                form.classList.remove('hidden');
+                btn.classList.add('hidden');
+            } else {
+                view.classList.remove('hidden');
+                form.classList.add('hidden');
+                btn.classList.remove('hidden');
+            }
+        }
+
+        function saveProfile(e) {
+            e.preventDefault();
+            appData.profile = {
+                name: document.getElementById('edit-name').value.trim(),
+                univ: document.getElementById('edit-univ').value.trim(),
+                dept: document.getElementById('edit-dept').value.trim(),
+                no: document.getElementById('edit-no').value.trim(),
+                goals: document.getElementById('edit-goals').value.trim(),
+                notes: document.getElementById('edit-notes').value.trim()
+            };
+
+            saveData();
+            renderProfile();
+            toggleProfileEdit();
+        }
+
+        /* Reset Data Helper */
+        function resetDataModal() {
+            if (confirm("Tüm kayıtlı verileriniz ve tamamlama işaretleriniz varsayılana sıfırlanacak. Onaylıyor musunuz?")) {
+                localStorage.removeItem('uni_tracker_courses');
+                localStorage.removeItem('uni_tracker_daily');
+                localStorage.removeItem('uni_tracker_profile');
+                location.reload();
+            }
+        }
+
+        /* Utility Helper */
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
